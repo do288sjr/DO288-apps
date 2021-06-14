@@ -83,17 +83,19 @@ pipeline {
 
                 sh '''
                     oc new-app --as-deployment-config --name ${APP_NAME} -i ${APP_NAME}:latest -n ${DEV_PROJECT}
-                    oc expose svc/${APP_NAME}
-                '''
+                    oc expose svc/${APP_NAME} -n ${DEV_PROJECT}
+                   '''
             }
         }
 
         stage('Wait for deployment in DEV env') {
-            script {
-                openshift.withCluster() {
-                    openshift.withProject(env.DEV_PROJECT) {
-                        openshift.selector("dc", "${APP_NAME}").related('pods').untilEach(1) {
-                            return (it.object().status.phase == "Running")
+            steps {
+                script {
+                    openshift.withCluster() {
+                        openshift.withProject(env.DEV_PROJECT) {
+                            openshift.selector("dc", "${APP_NAME}").related('pods').untilEach(1) {
+                                return (it.object().status.phase == "Running")
+                            }
                         }
                     }
                 }
